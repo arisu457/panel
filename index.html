@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>多目的管理パネル</title>
-<link rel="icon" href="favicon.ico" type="image/x-icon" />
 <style>
   * {
     box-sizing: border-box;
@@ -155,32 +154,33 @@
 
 <div class="container">
   <section class="panel member-list">
-   <form id="addForm">
-  <input type="text" name="name" placeholder="名前" required />
-  <input type="email" name="email" placeholder="メール" />
-  <input type="text" name="team" placeholder="チーム" />
-  <input type="text" name="role" placeholder="役職" />
-  <input type="text" name="memo" placeholder="メモ" />
-  <button type="submit">追加</button>
-</form>
+    <form id="addForm">
+      <input type="text" name="name" placeholder="名前" required />
+      <input type="email" name="email" placeholder="メール" />
+      <input type="text" name="team" placeholder="チーム" />
+      <input type="text" name="role" placeholder="役職" />
+      <input type="text" name="memo" placeholder="メモ" />
+      <button type="submit">追加</button>
+    </form>
 
     <table id="memberTable">
-      <<thead>
-  <tr>
-    <th>名前</th><th>メール</th><th>チーム</th><th>役職</th><th>メモ</th>
-  </tr>
-</thead>
-
+      <thead>
+        <tr><th>名前</th><th>メール</th><th>チーム</th><th>役職</th><th>メモ</th></tr>
+      </thead>
       <tbody></tbody>
     </table>
   </section>
 
+  <section class="panel transfer-log">
+    <h2>異動ログ</h2>
+    <div id="logContainer"></div>
+  </section>
+</div>
 
 <!-- 編集用モーダル -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <form id="editForm">
-      <input type="hidden" name="index" />
       <label>名前<input type="text" name="name" required readonly></label>
       <label>メール<input type="email" name="email"></label>
       <label>チーム<input type="text" name="team"></label>
@@ -193,7 +193,6 @@
     </form>
   </div>
 </div>
-
 
 <script>
   const memberTableBody = document.querySelector("#memberTable tbody");
@@ -214,29 +213,21 @@
     localStorage.setItem("transferLogs", JSON.stringify(logs));
   }
 
-function renderMembers(){
-  memberTableBody.innerHTML = "";
-  members.forEach((m, i) => {
-    const tr = document.createElement("tr");
-    tr.dataset.index = i;
-    tr.innerHTML = `
-      <td>${m.name}</td>
-      <td>${m.email || ""}</td>
-      <td>${m.team || ""}</td>
-      <td>${m.role || ""}</td>
-      <td>${m.memo || ""}</td>
-      <td style="position:relative;">
-        <button class="menu-btn">・・・</button>
-        <div class="menu" style="display:none; position:absolute; right:0; background:#fff; border:1px solid #ccc; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.15); z-index:100; min-width:100px;">
-          <div class="menu-edit" style="padding:8px; cursor:pointer;">編集</div>
-          <div class="menu-delete" style="padding:8px; cursor:pointer; color:#d33;">削除</div>
-        </div>
-      </td>
-    `;
-    memberTableBody.appendChild(tr);
-  });
-
- 
+  function renderMembers(){
+    memberTableBody.innerHTML = "";
+    members.forEach((m, i) => {
+      const tr = document.createElement("tr");
+      tr.dataset.index = i;
+      tr.innerHTML = `
+        <td>${m.name}</td>
+        <td>${m.email || ""}</td>
+        <td>${m.team || ""}</td>
+        <td>${m.role || ""}</td>
+        <td>${m.memo || ""}</td>
+      `;
+      memberTableBody.appendChild(tr);
+    });
+  }
 
   function renderLogs(){
     logContainer.innerHTML = "";
@@ -276,20 +267,17 @@ function renderMembers(){
     openEditModal(idx);
   });
 
-function openEditModal(index){
-  const member = members[index];
-  if(!member) return;
-
-  // hidden inputの値をちゃんとセット！
-  editForm.elements["index"].value = index;
-
-  editForm.name.value = member.name;
-  editForm.email.value = member.email;
-  editForm.team.value = member.team;
-  editForm.role.value = member.role;
-  editForm.memo.value = member.memo;
-  modalBg.style.display = "flex";
-}
+  function openEditModal(index){
+    const member = members[index];
+    if(!member) return;
+    editForm.index.value = index; // hiddenじゃないけど管理用
+    editForm.name.value = member.name;
+    editForm.email.value = member.email;
+    editForm.team.value = member.team;
+    editForm.role.value = member.role;
+    editForm.memo.value = member.memo;
+    modalBg.style.display = "flex";
+  }
 
   cancelEditBtn.addEventListener("click", () => {
     modalBg.style.display = "none";
