@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>多目的管理パネル</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+
+  .container {
+    display: flex;
+    gap: 20px;
+    height: 90vh;
+  }
+
+  .panel {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .member-list {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .transfer-log {
+    flex: 1;
+    border-left: 1px solid #eee;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    margin-top: 10px;
+  }
+
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+  }
+
+  th {
+    background: #e4e7eb;
+    border-radius: 12px 12px 0 0;
+    font-weight: 600;
+  }
+
+  tbody tr {
+    background: #fafbfc;
+    border-radius: 12px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+  }
+
+  tbody tr:hover {
+    background: #e0e5eb;
+  }
+
+  form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  input, select {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    flex: 1 1 150px;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: #0078d7;
+    box-shadow: 0 0 6px #0078d7aa;
+  }
+
+  button {
+    background: #0078d7;
+    border: none;
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background: #005a9e;
+  }
+
+  .log-entry {
+    background: #f0f4ff;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #1a237e;
+    box-shadow: 0 1px 3px rgba(26,35,126,0.2);
+  }
+
+  /* モーダル背景 */
+  .modal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right:0;
+    bottom:0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* モーダル本体 */
+  .modal {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    min-width: 320px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  }
+
+  .modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal label {
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <section class="panel member-list">
+    <form id="addForm">
+      <input type="text" name="name" placeholder="名前" required />
+      <input type="email" name="email" placeholder="メール" />
+      <input type="text" name="team" placeholder="チーム" />
+      <input type="text" name="role" placeholder="役職" />
+      <input type="text" name="memo" placeholder="メモ" />
+      <button type="submit">追加</button>
+    </form>
+
+    <table id="memberTable">
+      <thead>
+        <tr><th>名前</th><th>メール</th><th>チーム</th><th>役職</th><th>メモ</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="panel transfer-log">
+    <h2>異動ログ</h2>
+    <div id="logContainer"></div>
+  </section>
+</div>
+
+<!-- 編集用モーダル -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <form id="editForm">
+      <label>名前<input type="text" name="name" required readonly></label>
+      <label>メール<input type="email" name="email"></label>
+      <label>チーム<input type="text" name="team"></label>
+      <label>役職<input type="text" name="role"></label>
+      <label>メモ<input type="text" name="memo"></label>
+      <div style="text-align:right; margin-top:10px;">
+        <button type="button" id="cancelEdit">キャンセル</button>
+        <button type="submit">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const memberTableBody = document.querySelector("#memberTable tbody");
+  const logContainer = document.getElementById("logContainer");
+  const addForm = document.getElementById("addForm");
+  const modalBg = document.getElementById("modalBg");
+  const editForm = document.getElementById("editForm");
+  const cancelEditBtn = document.getElementById("cancelEdit");
+
+  let members = JSON.parse(localStorage.getItem("members") || "[]");
+  let logs = JSON.parse(localStorage.getItem("transferLogs") || "[]");
+
+  function saveMembers(){
+    localStorage.setItem("members", JSON.stringify(members));
+  }
+
+  function saveLogs(){
+    localStorage.setItem("transferLogs", JSON.stringify(logs));
+  }
+
+  function renderMembers(){
+    memberTableBody.innerHTML = "";
+    members.forEach((m, i) => {
+      const tr = document.createElement("tr");
+      tr.dataset.index = i;
+      tr.innerHTML = `
+        <td>${m.name}</td>
+        <td>${m.email || ""}</td>
+        <td>${m.team || ""}</td>
+        <td>${m.role || ""}</td>
+        <td>${m.memo || ""}</td>
+      `;
+      memberTableBody.appendChild(tr);
+    });
+  }
+
+  function renderLogs(){
+    logContainer.innerHTML = "";
+    logs.slice().reverse().forEach(log => {
+      const div = document.createElement("div");
+      div.className = "log-entry";
+      div.textContent = `${log.date} - ${log.name} さんが「${log.oldTeam}」から「${log.newTeam}」に異動しました`;
+      logContainer.appendChild(div);
+    });
+  }
+
+  addForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const formData = new FormData(addForm);
+    const name = formData.get("name").trim();
+    if(!name){
+      alert("名前は必須だよ");
+      return;
+    }
+    const newMember = {
+      name,
+      email: formData.get("email").trim(),
+      team: formData.get("team").trim(),
+      role: formData.get("role").trim(),
+      memo: formData.get("memo").trim()
+    };
+    members.push(newMember);
+    saveMembers();
+    renderMembers();
+    addForm.reset();
+  });
+
+  memberTableBody.addEventListener("dblclick", e => {
+    const tr = e.target.closest("tr");
+    if(!tr) return;
+    const idx = Number(tr.dataset.index);
+    openEditModal(idx);
+  });
+
+  function openEditModal(index){
+    const member = members[index];
+    if(!member) return;
+    editForm.index.value = index; // hiddenじゃないけど管理用
+    editForm.name.value = member.name;
+    editForm.email.value = member.email;
+    editForm.team.value = member.team;
+    editForm.role.value = member.role;
+    editForm.memo.value = member.memo;
+    modalBg.style.display = "flex";
+  }
+
+  cancelEditBtn.addEventListener("click", () => {
+    modalBg.style.display = "none";
+  });
+
+  editForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const idx = Number(editForm.index?.value ?? -1);
+    if(idx < 0 || idx >= members.length) {
+      alert("不正な操作です");
+      return;
+    }
+    const oldTeam = members[idx].team || "";
+    const newTeam = editForm.team.value.trim();
+
+    members[idx].email = editForm.email.value.trim();
+    members[idx].team = newTeam;
+    members
+
+
+
+
+
+
+ChatGPT:
+[idx].role = editForm.role.value.trim();
+members[idx].memo = editForm.memo.value.trim();
+
+pgsql
+コピーする
+編集する
+if(oldTeam !== newTeam){
+  const log = {
+    date: new Date().toLocaleString(),
+    name: members[idx].name,
+    oldTeam,
+    newTeam
+  };
+  logs.push(log);
+  saveLogs();
+  renderLogs();
+}
+
+saveMembers();
+renderMembers();
+modalBg.style.display = "none";
+});
+
+// hidden inputをeditFormに追加（これをscriptの最初の方で一回だけやる）
+const hiddenIdx = document.createElement("input");
+hiddenIdx.type = "hidden";
+hiddenIdx.name = "index";
+editForm.appendChild(hiddenIdx);
+
+function openEditModal(index){
+  const member = members[index];
+  if(!member) return;
+  // hidden inputの値をセット
+  editForm.elements["index"].value = index;
+  editForm.name.value = member.name;
+  editForm.email.value = member.email;
+  editForm.team.value = member.team;
+  editForm.role.value = member.role;
+  editForm.memo.value = member.memo;
+  modalBg.style.display = "flex";
+}
+
+editForm.addEventListener("submit", e => {
+  e.preventDefault();
+  const idx = Number(editForm.elements["index"].value);
+  if(idx < 0 || idx >= members.length) {
+    alert("不正な操作です");
+    return;
+  }
+  const oldTeam = members[idx].team || "";
+  const newTeam = editForm.team.value.trim();
+
+  members[idx].email = editForm.email.value.trim();
+  members[idx].team = newTeam;
+  members[idx].role = editForm.role.value.trim();
+  members[idx].memo = editForm.memo.value.trim();
+
+  if(oldTeam !== newTeam){
+    const log = {
+      date: new Date().toLocaleString(),
+      name: members[idx].name,
+      oldTeam,
+      newTeam
+    };
+    logs.push(log);
+    saveLogs();
+    renderLogs();
+  }
+
+  saveMembers();
+  renderMembers();
+  modalBg.style.display = "none";
+});
+
+// 初期表示
+renderMembers();
+renderLogs();
+
+</script> </body> </html>
