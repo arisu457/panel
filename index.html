@@ -268,17 +268,20 @@
     openEditModal(idx);
   });
 
-  function openEditModal(index){
-    const member = members[index];
-    if(!member) return;
-    editForm.index.value = index; // hiddenじゃないけど管理用
-    editForm.name.value = member.name;
-    editForm.email.value = member.email;
-    editForm.team.value = member.team;
-    editForm.role.value = member.role;
-    editForm.memo.value = member.memo;
-    modalBg.style.display = "flex";
-  }
+function openEditModal(index){
+  const member = members[index];
+  if(!member) return;
+
+  // hidden inputの値をちゃんとセット！
+  editForm.elements["index"].value = index;
+
+  editForm.name.value = member.name;
+  editForm.email.value = member.email;
+  editForm.team.value = member.team;
+  editForm.role.value = member.role;
+  editForm.memo.value = member.memo;
+  modalBg.style.display = "flex";
+}
 
   cancelEditBtn.addEventListener("click", () => {
     modalBg.style.display = "none";
