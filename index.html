@@ -236,53 +236,7 @@ function renderMembers(){
     memberTableBody.appendChild(tr);
   });
 
-  // ３点メニューの開閉処理
-  document.querySelectorAll(".menu-btn").forEach(btn => {
-    btn.addEventListener("click", e => {
-      e.stopPropagation();
-      closeAllMenus(); // 他のメニュー閉じる
-      const menu = btn.nextElementSibling;
-      menu.style.display = (menu.style.display === "block") ? "none" : "block";
-    });
-  });
-
-  // 編集クリック
-  document.querySelectorAll(".menu-edit").forEach(editBtn => {
-    editBtn.addEventListener("click", e => {
-      const tr = e.target.closest("tr");
-      const idx = Number(tr.dataset.index);
-      openEditModal(idx);
-      closeAllMenus();
-    });
-  });
-
-  // 削除クリック
-  document.querySelectorAll(".menu-delete").forEach(delBtn => {
-    delBtn.addEventListener("click", e => {
-      const tr = e.target.closest("tr");
-      const idx = Number(tr.dataset.index);
-      closeAllMenus();
-      if(confirm(`${members[idx].name} さんを削除してもよろしいですか？`)){
-        members.splice(idx, 1);
-        saveMembers();
-        renderMembers();
-      }
-    });
-  });
-}
-
-// メニュー閉じる関数
-function closeAllMenus(){
-  document.querySelectorAll(".menu").forEach(menu => {
-    menu.style.display = "none";
-  });
-}
-
-// ページどこかクリックしたらメニュー閉じる
-document.addEventListener("click", () => {
-  closeAllMenus();
-});
-
+ 
 
   function renderLogs(){
     logContainer.innerHTML = "";
