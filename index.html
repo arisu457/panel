@@ -262,7 +262,7 @@ function renderMembers(){
       const tr = e.target.closest("tr");
       const idx = Number(tr.dataset.index);
       closeAllMenus();
-      if(confirm(`${members[idx].name} さんを削除してもいい？`)){
+      if(confirm(`${members[idx].name} さんを削除してもよろしいですか？`)){
         members.splice(idx, 1);
         saveMembers();
         renderMembers();
