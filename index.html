@@ -165,7 +165,7 @@
 
     <table id="memberTable">
       <thead>
-        <tr><th>名前</th><th>id</th><th>チーム</th><th>役職</th><th>メモ</th></tr>
+        <tr><th>名前</th><th>ID</th><th>チーム</th><th>役職</th><th>メモ</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -220,7 +220,7 @@
       tr.dataset.index = i;
       tr.innerHTML = `
         <td>${m.name}</td>
-        <td>${m.email || ""}</td>
+        <td>${m.id   || ""}</td>
         <td>${m.team || ""}</td>
         <td>${m.role || ""}</td>
         <td>${m.memo || ""}</td>
@@ -249,7 +249,7 @@
     }
     const newMember = {
       name,
-      email: formData.get("id").trim(),
+      id: formData.get("id").trim(),
       team: formData.get("team").trim(),
       role: formData.get("role").trim(),
       memo: formData.get("memo").trim()
@@ -293,7 +293,7 @@
     const oldTeam = members[idx].team || "";
     const newTeam = editForm.team.value.trim();
 
-    members[idx].email = editForm.email.value.trim();
+    members[idx].id = editForm.id.value.trim();
     members[idx].team = newTeam;
     members
 
@@ -355,7 +355,7 @@ editForm.addEventListener("submit", e => {
   const oldTeam = members[idx].team || "";
   const newTeam = editForm.team.value.trim();
 
-  members[idx].id = editForm.email.value.trim();
+  members[idx].id = editForm.id.value.trim();
   members[idx].team = newTeam;
   members[idx].role = editForm.role.value.trim();
   members[idx].memo = editForm.memo.value.trim();
