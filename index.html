@@ -156,7 +156,7 @@
   <section class="panel member-list">
     <form id="addForm">
       <input type="text" name="name" placeholder="名前" required />
-      <input type="email" name="email" placeholder="メール" />
+      <input type="number" name="id" placeholder="ID" />
       <input type="text" name="team" placeholder="チーム" />
       <input type="text" name="role" placeholder="役職" />
       <input type="text" name="memo" placeholder="メモ" />
@@ -165,7 +165,7 @@
 
     <table id="memberTable">
       <thead>
-        <tr><th>名前</th><th>メール</th><th>チーム</th><th>役職</th><th>メモ</th></tr>
+        <tr><th>名前</th><th>id</th><th>チーム</th><th>役職</th><th>メモ</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -182,7 +182,7 @@
   <div class="modal">
     <form id="editForm">
       <label>名前<input type="text" name="name" required readonly></label>
-      <label>メール<input type="email" name="email"></label>
+      <label>ID<input type="number" name="id"></label>
       <label>チーム<input type="text" name="team"></label>
       <label>役職<input type="text" name="role"></label>
       <label>メモ<input type="text" name="memo"></label>
@@ -249,7 +249,7 @@
     }
     const newMember = {
       name,
-      email: formData.get("email").trim(),
+      email: formData.get("id").trim(),
       team: formData.get("team").trim(),
       role: formData.get("role").trim(),
       memo: formData.get("memo").trim()
@@ -272,7 +272,7 @@
     if(!member) return;
     editForm.index.value = index; // hiddenじゃないけど管理用
     editForm.name.value = member.name;
-    editForm.email.value = member.email;
+    editForm.id.value = member.id;
     editForm.team.value = member.team;
     editForm.role.value = member.role;
     editForm.memo.value = member.memo;
@@ -338,7 +338,7 @@ function openEditModal(index){
   // hidden inputの値をセット
   editForm.elements["index"].value = index;
   editForm.name.value = member.name;
-  editForm.email.value = member.email;
+  editForm.id.value = member.id;
   editForm.team.value = member.team;
   editForm.role.value = member.role;
   editForm.memo.value = member.memo;
@@ -355,7 +355,7 @@ editForm.addEventListener("submit", e => {
   const oldTeam = members[idx].team || "";
   const newTeam = editForm.team.value.trim();
 
-  members[idx].email = editForm.email.value.trim();
+  members[idx].id = editForm.email.value.trim();
   members[idx].team = newTeam;
   members[idx].role = editForm.role.value.trim();
   members[idx].memo = editForm.memo.value.trim();
