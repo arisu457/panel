@@ -181,6 +181,7 @@
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <form id="editForm">
+      <input type="hidden" name="index" />
       <label>名前<input type="text" name="name" required readonly></label>
       <label>ID<input type="number" name="id"></label>
       <label>チーム<input type="text" name="team"></label>
@@ -213,6 +214,15 @@
     localStorage.setItem("transferLogs", JSON.stringify(logs));
   }
 
+  function formatDate(date){
+    // yyyy/MM/dd形式に整形
+    const d = new Date(date);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}/${mm}/${dd}`;
+  }
+
   function renderMembers(){
     memberTableBody.innerHTML = "";
     members.forEach((m, i) => {
@@ -220,7 +230,7 @@
       tr.dataset.index = i;
       tr.innerHTML = `
         <td>${m.name}</td>
-        <td>${m.id   || ""}</td>
+        <td>${m.id || ""}</td>
         <td>${m.team || ""}</td>
         <td>${m.role || ""}</td>
         <td>${m.memo || ""}</td>
@@ -234,7 +244,8 @@
     logs.slice().reverse().forEach(log => {
       const div = document.createElement("div");
       div.className = "log-entry";
-      div.textContent = `${log.date} - ${log.name} さんが「${log.oldTeam}」から「${log.newTeam}」に異動しました`;
+      // 日付をyyyy/MM/dd形式で表示
+      div.textContent = `${formatDate(log.date)} - ${log.name} さんが「${log.oldTeam}」から「${log.newTeam}」に異動しました`;
       logContainer.appendChild(div);
     });
   }
@@ -270,7 +281,7 @@
   function openEditModal(index){
     const member = members[index];
     if(!member) return;
-    editForm.index.value = index; // hiddenじゃないけど管理用
+    editForm.elements["index"].value = index;
     editForm.name.value = member.name;
     editForm.id.value = member.id;
     editForm.team.value = member.team;
@@ -285,101 +296,39 @@
 
   editForm.addEventListener("submit", e => {
     e.preventDefault();
-    const idx = Number(editForm.index?.value ?? -1);
+    const idx = Number(editForm.elements["index"].value);
     if(idx < 0 || idx >= members.length) {
       alert("不正な操作です");
       return;
     }
+
     const oldTeam = members[idx].team || "";
     const newTeam = editForm.team.value.trim();
 
     members[idx].id = editForm.id.value.trim();
     members[idx].team = newTeam;
-    members
+    members[idx].role = editForm.role.value.trim();
+    members[idx].memo = editForm.memo.value.trim();
 
+    if(oldTeam !== newTeam){
+      const log = {
+        date: new Date().toISOString(),  // ここはISO文字列で保存しとくのが安心
+        name: members[idx].name,
+        oldTeam, newTeam
+      };
+      logs.push(log);
+      saveLogs();
+      renderLogs();
+    }
 
+    saveMembers();
+    renderMembers();
+    modalBg.style.display = "none";
+  });
 
-
-
-
-ChatGPT:
-[idx].role = editForm.role.value.trim();
-members[idx].memo = editForm.memo.value.trim();
-
-pgsql
-コピーする
-編集する
-if(oldTeam !== newTeam){
-  const log = {
-    date: new Date().toLocaleString(),
-    name: members[idx].name,
-    oldTeam,
-    newTeam
-  };
-  logs.push(log);
-  saveLogs();
-  renderLogs();
-}
-
-saveMembers();
-renderMembers();
-modalBg.style.display = "none";
-});
-
-// hidden inputをeditFormに1回だけ追加
-if (!editForm.querySelector('input[name="index"]')) {
-  const hiddenIdx = document.createElement("input");
-  hiddenIdx.type = "hidden";
-  hiddenIdx.name = "index";
-  editForm.appendChild(hiddenIdx);
-}
-
-function openEditModal(index){
-  const member = members[index];
-  if(!member) return;
-  editForm.elements["index"].value = index;
-  editForm.name.value = member.name;
-  editForm.id.value = member.id;
-  editForm.team.value = member.team;
-  editForm.role.value = member.role;
-  editForm.memo.value = member.memo;
-  modalBg.style.display = "flex";
-}
-
-editForm.addEventListener("submit", e => {
-  e.preventDefault();
-  const idx = Number(editForm.elements["index"].value);
-  if(idx < 0 || idx >= members.length) {
-    alert("不正な操作です");
-    return;
-  }
-  const oldTeam = members[idx].team || "";
-  const newTeam = editForm.team.value.trim();
-
-  members[idx].id = editForm.id.value.trim();
-  members[idx].team = newTeam;
-  members[idx].role = editForm.role.value.trim();
-  members[idx].memo = editForm.memo.value.trim();
-
-  if(oldTeam !== newTeam){
-    const log = {
-      date: new Date().toLocaleString(),
-      name: members[idx].name,
-      oldTeam,
-      newTeam
-    };
-    logs.push(log);
-    saveLogs();
-    renderLogs();
-  }
-
-  saveMembers();
+  // 最初に表示
   renderMembers();
-  modalBg.style.display = "none";
-});
-
-// 初期表示
-renderMembers();
-renderLogs();
-
-</script> </body> </html>
+  renderLogs();
+</script>
+</body>
+</html>
