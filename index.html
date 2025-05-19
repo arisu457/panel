@@ -326,16 +326,17 @@ renderMembers();
 modalBg.style.display = "none";
 });
 
-// hidden inputをeditFormに追加（これをscriptの最初の方で一回だけやる）
-const hiddenIdx = document.createElement("input");
-hiddenIdx.type = "hidden";
-hiddenIdx.name = "index";
-editForm.appendChild(hiddenIdx);
+// hidden inputをeditFormに1回だけ追加
+if (!editForm.querySelector('input[name="index"]')) {
+  const hiddenIdx = document.createElement("input");
+  hiddenIdx.type = "hidden";
+  hiddenIdx.name = "index";
+  editForm.appendChild(hiddenIdx);
+}
 
 function openEditModal(index){
   const member = members[index];
   if(!member) return;
-  // hidden inputの値をセット
   editForm.elements["index"].value = index;
   editForm.name.value = member.name;
   editForm.id.value = member.id;
